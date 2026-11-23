@@ -1,0 +1,49 @@
+
+name: Build MADHUR FARM APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Extract MADHUR FARM source
+        run: unzip -q madhur_farm_apk_build.zip -d source
+
+      - name: Create Android project
+        run: flutter create --platforms=android --org com.madhurfarm build_scaffold
+
+      - name: Copy app source
+        run: |
+          cp source/madhur_farm_apk_build/pubspec.yaml build_scaffold/pubspec.yaml
+          cp source/madhur_farm_apk_build/lib/main.dart build_scaffold/lib/main.dart
+
+      - name: Install dependencies
+        working-directory: build_scaffold
+        run: flutter pub get
+
+      - name: Build release APK
+        working-directory: build_scaffold
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MADHUR-FARM-APK
+          path: build_scaffold/build/app/outputs/flutter-apk/app-release.apk
